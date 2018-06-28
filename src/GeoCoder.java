@@ -28,15 +28,17 @@ public class GeoCoder {
     System.out.println("Caption: " + gd.getCaption() +  " latitude: " + String.valueOf(gd.getLatitude()) +" longitude: " + String.valueOf(gd.getLongitude()));
     GeoData gd2 = GeoCoder.getByCaption("Шоссейная ул., 2, Москва, 109548");
     System.out.println("Caption: " + gd2.getCaption() +  " latitude: " + String.valueOf(gd2.getLatitude()) +" longitude: " + String.valueOf(gd2.getLongitude()));
-    ArrayList<GeoData> locations = new ArrayList<>(),routePoints;
+    ArrayList<GeoData> locations = new ArrayList<>();
     locations.add(gd);
     locations.add(gd2);
-    routePoints = GeoCoder.route(locations);
-    if (routePoints != null){
-      for (int i=0; i < routePoints.size(); ++i){
-        System.out.println("Coordinates: "+ String.valueOf(routePoints.get(i).getLatitude()) + "," +String.valueOf(routePoints.get(i).getLongitude()));
+    RouteData routeData = GeoCoder.route(locations);
+    if (routeData.getRoutePoints() != null){
+      for (int i=0; i < routeData.getRoutePoints().size(); ++i){
+        System.out.println("Coordinate #" +String.valueOf(i)+": "+ String.valueOf((routeData.getRoutePoints().get(i).getLatitude()) + "," +String.valueOf((routeData.getRoutePoints().get(i).getLongitude()))));
       }
     }
+    System.out.println("Approximate distance: " + String.valueOf(routeData.getDistance()) + " meters");
+    System.out.println("Approximate trip duration: " + String.valueOf(routeData.getDuration()) + " seconds");
   }
 
 
@@ -77,9 +79,10 @@ public class GeoCoder {
     return null;
   }
 
-  public static ArrayList<GeoData> route(ArrayList<GeoData> locations){
+  public static RouteData route(ArrayList<GeoData> locations){
     //Строит точечный маршрут между указанными в locations точками
     String coordintates = "",extractedData = null;
+    int time, distance;
     ArrayList<GeoData> routePoints = new ArrayList<>();
     for (int i = 0; i < locations.size(); ++i){
       coordintates += String.valueOf(locations.get(i).getLongitude())+","+String.valueOf(locations.get(i).getLatitude());
@@ -101,10 +104,14 @@ public class GeoCoder {
       JSONObject arrElem = arr.getJSONObject(0);
       JSONObject geom = arrElem.getJSONObject("geometry");
       JSONArray coords = geom.getJSONArray("coordinates");
+      //JSONObject jsonDuration = arrElem.getJSONObject("duration");
+      //JSONObject jsonDistance = arrElem.getJSONObject("distance");
+      distance = (int)arrElem.getFloat("distance");
+      time = (int) arrElem.getFloat("duration");
       for (int i = 0; i < coords.length(); ++i){
         routePoints.add(new GeoData("",(Double) coords.getJSONArray(i).get(0),(Double) coords.getJSONArray(i).get(1)));
       }
-      return  routePoints;
+      return  new RouteData(routePoints,distance,time);
     }
     return null;
   }
@@ -148,4 +155,9 @@ public class GeoCoder {
     InputSource is = new InputSource(new StringReader(xml));
     return builder.parse(is);
   }
+
+  private GeoCoder(){
+    //Запрещаем создание таких объектов
+  }
+
 }
