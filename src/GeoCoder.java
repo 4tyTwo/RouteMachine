@@ -3,6 +3,7 @@ import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
+import javax.swing.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
@@ -24,21 +25,24 @@ public class GeoCoder {
 
   public static void main(String[] args){
     Locale.setDefault(new Locale("en", "US"));
+    GuiFrame gui = new GuiFrame();
     GeoData gd = GeoCoder.getByCaption("ул. Гурьянова, 19к1, Москва, 109548");
-    System.out.println("Caption: " + gd.getCaption() +  " latitude: " + String.valueOf(gd.getLatitude()) +" longitude: " + String.valueOf(gd.getLongitude()));
+    gui.console.append("Caption: " + gd.getCaption() +  " latitude: " + String.valueOf(gd.getLatitude()) +" longitude: " + String.valueOf(gd.getLongitude())+"\n");
     GeoData gd2 = GeoCoder.getByCaption("Шоссейная ул., 2, Москва, 109548");
-    System.out.println("Caption: " + gd2.getCaption() +  " latitude: " + String.valueOf(gd2.getLatitude()) +" longitude: " + String.valueOf(gd2.getLongitude()));
+    gui.console.append("Caption: " + gd2.getCaption() +  " latitude: " + String.valueOf(gd2.getLatitude()) +" longitude: " + String.valueOf(gd2.getLongitude())+"\n");
     ArrayList<GeoData> locations = new ArrayList<>();
     locations.add(gd);
     locations.add(gd2);
     RouteData routeData = GeoCoder.route(locations);
     if (routeData.getRoutePoints() != null){
       for (int i=0; i < routeData.getRoutePoints().size(); ++i){
-        System.out.println("Coordinate #" +String.valueOf(i)+": "+ String.valueOf((routeData.getRoutePoints().get(i).getLatitude()) + "," +String.valueOf((routeData.getRoutePoints().get(i).getLongitude()))));
+        gui.console.append("Coordinate #" +String.valueOf(i)+": "+ String.valueOf((routeData.getRoutePoints().get(i).getLatitude()) + "," +String.valueOf((routeData.getRoutePoints().get(i).getLongitude()))) + "\n");
       }
     }
-    System.out.println("Approximate distance: " + String.valueOf(routeData.getDistance()) + " meters");
-    System.out.println("Approximate trip duration: " + String.valueOf(routeData.getDuration()) + " seconds");
+    gui.console.append("Approximate distance: " + String.valueOf(routeData.getDistance()) + " meters\n");
+    gui.console.append("Approximate trip duration: " + String.valueOf(routeData.getDuration()) + " seconds\n");
+    //new GuiFrame();
+
   }
 
 
