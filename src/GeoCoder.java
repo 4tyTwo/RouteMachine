@@ -26,23 +26,6 @@ public class GeoCoder {
   public static void main(String[] args){
     Locale.setDefault(new Locale("en", "US"));
     GuiFrame gui = new GuiFrame();
-    GeoData gd = GeoCoder.getByCaption("ул. Гурьянова, 19к1, Москва, 109548");
-    gui.console.append("Caption: " + gd.getCaption() +  " latitude: " + String.valueOf(gd.getLatitude()) +" longitude: " + String.valueOf(gd.getLongitude())+"\n");
-    GeoData gd2 = GeoCoder.getByCaption("Шоссейная ул., 2, Москва, 109548");
-    gui.console.append("Caption: " + gd2.getCaption() +  " latitude: " + String.valueOf(gd2.getLatitude()) +" longitude: " + String.valueOf(gd2.getLongitude())+"\n");
-    ArrayList<GeoData> locations = new ArrayList<>();
-    locations.add(gd);
-    locations.add(gd2);
-    RouteData routeData = GeoCoder.route(locations);
-    if (routeData.getRoutePoints() != null){
-      for (int i=0; i < routeData.getRoutePoints().size(); ++i){
-        gui.console.append("Coordinate #" +String.valueOf(i)+": "+ String.valueOf((routeData.getRoutePoints().get(i).getLatitude()) + "," +String.valueOf((routeData.getRoutePoints().get(i).getLongitude()))) + "\n");
-      }
-    }
-    gui.console.append("Approximate distance: " + String.valueOf(routeData.getDistance()) + " meters\n");
-    gui.console.append("Approximate trip duration: " + String.valueOf(routeData.getDuration()) + " seconds\n");
-    //new GuiFrame();
-
   }
 
 
@@ -55,14 +38,14 @@ public class GeoCoder {
       Document xmlDoc = loadXMLFromString(getServerResponse(url,false));
       XPathFactory xpathFact = XPathFactory.newInstance();
       XPath xpath = xpathFact.newXPath();
-      float longitude = Float.parseFloat((String) xpath.evaluate("/searchresults/place[1]/@lon", xmlDoc, XPathConstants.STRING)); //Важно чтобы стояла локаль, в которой дробный разделитель это точка
-      float latitude = Float.parseFloat((String) xpath.evaluate("/searchresults/place[1]/@lat", xmlDoc, XPathConstants.STRING));
-      return new GeoData(caption, longitude, latitude);
+      Float longitude = Float.parseFloat((String) xpath.evaluate("/searchresults/place[1]/@lon", xmlDoc, XPathConstants.STRING)); //Важно чтобы стояла локаль, в которой дробный разделитель это точка
+      Float latitude = Float.parseFloat((String) xpath.evaluate("/searchresults/place[1]/@lat", xmlDoc, XPathConstants.STRING));
+      return new GeoData(caption, longitude, latitude); //В случае ошибки будут получены координаты 0,0, а название NOT FOUND
     }
     catch (Exception e) {
       e.printStackTrace(System.out);
+      return new GeoData("NOT FOUND", 0.0, 0.0); //В случае ошибки будут получены координаты 0,0, а название NOT FOUND
     }
-    return null;
   }
 
   public static GeoData getByCoordinates(float longitude,float latitude){
@@ -131,7 +114,7 @@ public class GeoCoder {
         con.setReadTimeout(2000);
         con.connect();
         String response = con.getResponseMessage();
-        if (response.equals("OK")) {
+        if (!response.equals("Unknown")){
           //Все номрмально
           //Считывание ответа сервера
           BufferedReader br = new BufferedReader(new InputStreamReader((con.getInputStream())));
@@ -145,7 +128,7 @@ public class GeoCoder {
           return extractedData;
         }
       } catch (IOException ioe) {
-        System.out.println("Сервер не отвечает");
+        //Сервер не отвечает
         return null;
       }
     }while (repeat);
