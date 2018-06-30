@@ -43,7 +43,7 @@ public class GeoCoder {
       return new GeoData(caption, longitude, latitude); //В случае ошибки будут получены координаты 0,0, а название NOT FOUND
     }
     catch (Exception e) {
-      e.printStackTrace(System.out);
+      //pass
       return new GeoData("NOT FOUND", 0.0, 0.0); //В случае ошибки будут получены координаты 0,0, а название NOT FOUND
     }
   }
@@ -83,7 +83,7 @@ public class GeoCoder {
       extractedData = getServerResponse(url,true);
     }
     catch (Exception e){
-      e.printStackTrace(System.out);
+      //pass
     }
     if (extractedData != null){
       JSONObject obj = new JSONObject(extractedData);
