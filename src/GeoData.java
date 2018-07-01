@@ -2,8 +2,10 @@ import org.apache.commons.math3.util.Precision;
 
 public final class GeoData {
   //Класс, обеспечивающий хранение основной  информации о географическом объекте
+  //Состояния нужны чтобы отслеживать создался ли объект верно
   public final static int STATE_NOT_FOUND = -1;
   public final static int STATE_OK = 0;
+
   private double longitude,latitude;
   private String caption;
 

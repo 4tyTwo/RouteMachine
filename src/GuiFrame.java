@@ -1,26 +1,24 @@
+import net.miginfocom.swing.MigLayout;
+import org.apache.commons.math3.util.Precision;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
 
-import net.miginfocom.swing.MigLayout;
-import org.apache.commons.math3.util.Precision;
-
 public class GuiFrame extends JFrame {
 
-  private class querryThread implements Runnable{
+  private class queryThread implements Runnable{
     public void run(){
       ArrayList<GeoData> routePoints = new ArrayList<>();
       for (int i = 0; i < 4; ++i) {
-        if (!jtf.get(i).getText().equals(""))
-          if (jtf.get(i).getText().matches("\\d{1,2}[.]\\d+[,]-?\\d{1,2}[.]\\d+")) {
-            String[] partions = jtf.get(i).getText().split(",");
+        if (!inputFields.get(i).getText().equals("") && inputFields.get(i).isVisible())
+          if (inputFields.get(i).getText().matches("\\d{1,2}[.]\\d+[,]-?\\d{1,2}[.]\\d+")) {
+            String[] partions = inputFields.get(i).getText().split(",");
             routePoints.add(GeoCoder.getByCoordinates(Float.valueOf(partions[0]), Float.valueOf(partions[1]))); //Longitude, Latitude
           } else {
-            GeoData tmp = GeoCoder.getByCaption(jtf.get(i).getText());
+            GeoData tmp = GeoCoder.getByCaption(inputFields.get(i).getText());
             if (tmp.getState() != tmp.STATE_NOT_FOUND)
               routePoints.add(tmp);
           }
@@ -39,7 +37,7 @@ public class GuiFrame extends JFrame {
           console.append("Точка пути №" +String.valueOf(i+1)+": "+ String.valueOf((data.getRoutePoints().get(i).getLatitude()) + "," +String.valueOf((data.getRoutePoints().get(i).getLongitude()))) + "\n");
         }
         float distance = data.getDistance(), duration = data.getDuration();
-        String distanceMeausureUnit = "м.", durationMeasureUnit = "сек.";
+        String distanceMeasureUnit = " м.", durationMeasureUnit = " сек.";
         if (duration > 60)
           if (duration > 1800) {
             duration = Precision.round(duration / 3600,1); //Часов
@@ -47,13 +45,13 @@ public class GuiFrame extends JFrame {
           }
           else {
             duration = Precision.round(duration / 60,1); //Минут
-            durationMeasureUnit = "мин.";
+            durationMeasureUnit = " мин.";
           }
         if (distance > 500) {
           distance = Precision.round(distance / 1000,1);
-          distanceMeausureUnit = "км.";
+          distanceMeasureUnit = " км.";
         }
-        console.append("Примерное расстояние: " + String.valueOf(distance) + distanceMeausureUnit + "\n");
+        console.append("Примерное расстояние: " + String.valueOf(distance) + distanceMeasureUnit + "\n");
         console.append("Примерное время в пути: " + String.valueOf(duration) + durationMeasureUnit +"\n");
       }
       else{
@@ -63,10 +61,16 @@ public class GuiFrame extends JFrame {
   }
 
   public JTextArea console;
-  private ArrayList<JTextField> jtf;
-  private ArrayList<JLabel> jl;
+  private ArrayList<JTextField> inputFields; //В массивах удобнее хранить повторяющиеся поля
+  private ArrayList<JLabel> routeLabels;
+  private int numberOfPoints;
+  private Dimension screenSize;
+
   public GuiFrame(){
     super();
+    //В конструкторе полностью собирается форма и создаются все ее элементы
+    screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    numberOfPoints = 2;
     JPanel root = new JPanel();
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     setTitle("RouteMachine");
@@ -74,16 +78,24 @@ public class GuiFrame extends JFrame {
     setSize(new Dimension(1500, 900));
     root.setLayout(new MigLayout());
     //Устнаовка 4 текстовых полей
-    jtf = new ArrayList<>();
-    jl = new ArrayList<>();
+    inputFields = new ArrayList<>();
+    routeLabels = new ArrayList<>();
     for (int i= 0; i < 4; ++i){
-      jtf.add(new JTextField());
-      jtf.get(i).setPreferredSize(new Dimension(130,25));
-      jl.add(new JLabel("Точка маршрута №"+String.valueOf(i+1) + ":"));
+      inputFields.add(new JTextField());
+      inputFields.get(i).setPreferredSize(new Dimension(130,25));
+      routeLabels.add(new JLabel("Точка маршрута №"+String.valueOf(i+1) + ":"));
+      if(i>1){
+        inputFields.get(i).setVisible(false);
+        routeLabels.get(i).setVisible(false);
+      }
     }
+    JButton addRoutePoint = new JButton("Добавить точку");
+    addRoutePoint.addMouseListener(new addButtonMouseListener());
+    JButton removeRoutePoints = new JButton("Удалить точку");
+    JButton help = new JButton("Справка");
+    help.addMouseListener(new helpButtonMouseListener());
+    removeRoutePoints.addMouseListener(new removeButtonMouseListener());
     console = new JTextArea();//Сюда печатаем ошибки и список координат
-    //console.setPreferredSize(new Dimension(500,300));
-   // console.setMaximumSize(new Dimension(500,10000));
     console.setLineWrap(true);
     console.setWrapStyleWord(true);
     console.setColumns(128);
@@ -94,51 +106,159 @@ public class GuiFrame extends JFrame {
     sp.setPreferredSize(new Dimension(500,300));
     sp.setMaximumSize(new Dimension(500,10000));
     //Поехали
-    //root.add(new JLabel("Distance: "));
-    //root.add(new JLabel("Duration: "),"wrap 15px");
     JButton route = new JButton("Построить маршрут");
     route.setPreferredSize(new Dimension(60,30));
-    root.add(sp,"span 2 5");
-    root.add(jl.get(0));
-    root.add(jtf.get(0),"wrap 15px");
-    root.add(jl.get(1));
-    root.add(jtf.get(1),"wrap 15px");
-    root.add(jl.get(2));
-    root.add(jtf.get(2),"wrap 15px");
-    root.add(jl.get(3));
-    root.add(jtf.get(3),"wrap 15px");
+    root.add(sp,"span 2 7");
+    for (int i = 0; i < 4; ++i) {
+      root.add(routeLabels.get(i));
+      root.add(inputFields.get(i),"wrap 15px");
+    }
+    root.add(addRoutePoint);
+    root.add(removeRoutePoints,"wrap 15px");
     root.add(route, "span");
+    root.add(help, "span");
     add(root);
     pack();
+    setLocationRelativeTo(null);
     setVisible(true);
 
-    route.addMouseListener(new MouseListener() {
-      @Override
-      public void mouseClicked(MouseEvent e) {
-        new Thread(new querryThread()).start();
-      }
-
-      @Override
-      public void mousePressed(MouseEvent e) {
-
-      }
-
-      @Override
-      public void mouseReleased(MouseEvent e) {
-
-      }
-
-      @Override
-      public void mouseEntered(MouseEvent e) {
-
-      }
-
-      @Override
-      public void mouseExited(MouseEvent e) {
-
-      }
-    });
+    route.addMouseListener(new RouteButtonListener());
 
   }
-  //TO DO: Написать листенеры для кнопок
+
+  private class RouteButtonListener implements MouseListener{
+    //Запускает поток с выполнением считывания данных с формы, запросом к серверу и выводу данных на экран
+    public void mouseClicked(MouseEvent e) {
+      new Thread(new queryThread()).start();
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+  };
+
+  private class addButtonMouseListener implements MouseListener{
+    //Добавляет ввод координаты
+    public void mouseClicked(MouseEvent e) {
+      if (numberOfPoints < 4){
+        inputFields.get(numberOfPoints).setVisible(true);
+        routeLabels.get(numberOfPoints).setVisible(true);
+        ++numberOfPoints;
+      }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+  };
+
+  private class removeButtonMouseListener implements MouseListener{
+    //Прячет ввод последней координаты
+    public void mouseClicked(MouseEvent e) {
+      if (numberOfPoints > 2){
+        inputFields.get(numberOfPoints-1).setVisible(false);
+        inputFields.get(numberOfPoints-1).setText("");
+        routeLabels.get(numberOfPoints-1).setVisible(false);
+        --numberOfPoints;
+      }
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+  };
+  private class helpButtonMouseListener implements MouseListener{
+    public void mouseClicked(MouseEvent e) {
+      JFrame helpFrame = new JFrame();
+      helpFrame.setResizable(false);
+      helpFrame.setTitle("Справка");
+      helpFrame.setSize(new Dimension(600,300));
+      helpFrame.setMinimumSize(new Dimension(600,300));
+      JTextArea helper = new JTextArea();
+      helper.setEditable(false);
+      helper.setLineWrap(true);
+      helper.setWrapStyleWord(true);
+      String helpText = "Данное приложение реализует построение пути между произвольными точками в количестве не более 4.\nТочки вводятся в поля в правой части окна приложения" +
+          " в виде названий на естественном языке или координат в формате долгота,широта.\nМаршрут прокладывается последовательно в соответствии с очередностью введеных точек.\n" +
+          "Точки можно добавлять и удалять при помощи соотвествующих кнопок.\n" +
+          "Если для ввода точек использовался естественный язык, то сервер сам попытается найти объект по внутренним параметрам поиска.\n" +
+          "Для вывода информации на экран используется консоль в левой части окна.\n" +
+          "После нажатия на кнопку 'Построить маршрут' ожидайте вывода в консоль.\n" +
+          "Время, необходимое на вывод зависит от доступности сервера и иногда может составлять более минуты";
+      helper.setText(helpText);
+      helper.setFont(new Font("Calibri", Font.PLAIN,16));
+      helpFrame.add(helper);
+      helpFrame.pack();
+      helpFrame.setLocationRelativeTo(null);
+      helpFrame.setVisible(true);
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+
+    }
+  };
 }

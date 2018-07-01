@@ -24,7 +24,7 @@ public class GeoCoder {
   //Копирование кода - пока расплата за статичность
 
   public static void main(String[] args){
-    Locale.setDefault(new Locale("en", "US"));
+    Locale.setDefault(new Locale("en", "US")); //В английской локали дробные числа точно разделяются точкой, в отличии от некоторых других
     GuiFrame gui = new GuiFrame();
   }
 
@@ -43,7 +43,6 @@ public class GeoCoder {
       return new GeoData(caption, longitude, latitude); //В случае ошибки будут получены координаты 0,0, а название NOT FOUND
     }
     catch (Exception e) {
-      //pass
       return new GeoData("NOT FOUND", 0.0, 0.0); //В случае ошибки будут получены координаты 0,0, а название NOT FOUND
     }
   }
@@ -61,9 +60,8 @@ public class GeoCoder {
         return new GeoData(caption, longitude, latitude);
       }
       catch (Exception e) {
-        e.printStackTrace(System.out);
+        return new GeoData("", longitude,latitude); //В случае ошибки просто возвращаем объект с пустым названием
     }
-    return null;
   }
 
   public static RouteData route(ArrayList<GeoData> locations){
@@ -71,6 +69,7 @@ public class GeoCoder {
     String coordintates = "",extractedData = null;
     int time, distance;
     ArrayList<GeoData> routePoints = new ArrayList<>();
+    //Построение подстроки координат для url
     for (int i = 0; i < locations.size(); ++i){
       coordintates += String.valueOf(locations.get(i).getLongitude())+","+String.valueOf(locations.get(i).getLatitude());
       if(i!=locations.size()-1){
@@ -91,8 +90,6 @@ public class GeoCoder {
       JSONObject arrElem = arr.getJSONObject(0);
       JSONObject geom = arrElem.getJSONObject("geometry");
       JSONArray coords = geom.getJSONArray("coordinates");
-      //JSONObject jsonDuration = arrElem.getJSONObject("duration");
-      //JSONObject jsonDistance = arrElem.getJSONObject("distance");
       distance = (int)arrElem.getFloat("distance");
       time = (int) arrElem.getFloat("duration");
       for (int i = 0; i < coords.length(); ++i){
