@@ -16,7 +16,7 @@ public class GuiFrame extends JFrame {
         if (!inputFields.get(i).getText().equals("") && inputFields.get(i).isVisible())
           if (inputFields.get(i).getText().matches("\\d{1,2}[.]\\d+[,]-?\\d{1,2}[.]\\d+")) {
             String[] partions = inputFields.get(i).getText().split(",");
-            routePoints.add(GeoCoder.getByCoordinates(Float.valueOf(partions[0]), Float.valueOf(partions[1]))); //Longitude, Latitude
+            routePoints.add(GeoCoder.getByCoordinates(Float.valueOf(partions[1]), Float.valueOf(partions[0]))); //Longitude, Latitude
           } else {
             GeoData tmp = GeoCoder.getByCaption(inputFields.get(i).getText());
             if (tmp.getState() != tmp.STATE_NOT_FOUND)
@@ -220,19 +220,20 @@ public class GuiFrame extends JFrame {
       JFrame helpFrame = new JFrame();
       helpFrame.setResizable(false);
       helpFrame.setTitle("Справка");
-      helpFrame.setSize(new Dimension(600,300));
-      helpFrame.setMinimumSize(new Dimension(600,300));
+      helpFrame.setSize(new Dimension(760,350));
+      helpFrame.setMinimumSize(new Dimension(760,350));
       JTextArea helper = new JTextArea();
       helper.setEditable(false);
       helper.setLineWrap(true);
       helper.setWrapStyleWord(true);
       String helpText = "Данное приложение реализует построение пути между произвольными точками в количестве не более 4.\nТочки вводятся в поля в правой части окна приложения" +
-          " в виде названий на естественном языке или координат в формате долгота,широта.\nМаршрут прокладывается последовательно в соответствии с очередностью введеных точек.\n" +
+          " в виде названий на естественном языке или координат в формате широта,долгота.\nМаршрут прокладывается последовательно в соответствии с очередностью введеных точек.\n" +
           "Точки можно добавлять и удалять при помощи соотвествующих кнопок.\n" +
           "Если для ввода точек использовался естественный язык, то сервер сам попытается найти объект по внутренним параметрам поиска.\n" +
           "Для вывода информации на экран используется консоль в левой части окна.\n" +
           "После нажатия на кнопку 'Построить маршрут' ожидайте вывода в консоль.\n" +
-          "Время, необходимое на вывод зависит от доступности сервера и иногда может составлять более минуты";
+          "Время, необходимое на получение результата, зависит от доступности сервера и иногда может составлять более минуты\n" +
+          "\nПриложение разработано в рамках выполнения тестового задания для XPO Logistics Топорковым Игорем www.github.com/4tyTwo";
       helper.setText(helpText);
       helper.setFont(new Font("Calibri", Font.PLAIN,16));
       helpFrame.add(helper);
