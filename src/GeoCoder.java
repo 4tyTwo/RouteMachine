@@ -20,18 +20,17 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 public class GeoCoder {
-  //Класс, хранящий методы для геокодирования - получения объекта по координатам и наооборот
-  //Копирование кода - пока расплата за статичность
+  // Класс, хранящий методы для геокодирования - получения объекта по координатам и наооборот
 
-  public static void main(String[] args){
-    Locale.setDefault(new Locale("en", "US")); //В английской локали дробные числа точно разделяются точкой, в отличии от некоторых других
+  public static void main(String[] args) {
+    Locale.setDefault(new Locale("en", "US")); // В английской локали дробные числа точно разделяются точкой, в отличии от некоторых других
     GuiFrame gui = new GuiFrame();
   }
 
 
   public static GeoData getByCaption(String caption) {
-    //Создает http запрос к сервису nominatim openstreetmaps и парсит ответ сервера
-    //Возвращает null если ответ не был получем или места с таким названием не было найдено
+    // Создает http запрос к сервису nominatim openstreetmaps и парсит ответ сервера
+    // Возвращает null если ответ не был получем или места с таким названием не было найдено
     try {
       String encodedCaption = URLEncoder.encode(caption, "UTF-8");
       URL url = new URL("https://nominatim.openstreetmap.org/search?q=" + encodedCaption + "&format=xml&limit=1");//Ограничиваемся первым результатом для простоты, они сортируются по важности и первый, вероятно, нужный.
@@ -40,32 +39,32 @@ public class GeoCoder {
       XPath xpath = xpathFact.newXPath();
       Float longitude = Float.parseFloat((String) xpath.evaluate("/searchresults/place[1]/@lon", xmlDoc, XPathConstants.STRING)); //Важно чтобы стояла локаль, в которой дробный разделитель это точка
       Float latitude = Float.parseFloat((String) xpath.evaluate("/searchresults/place[1]/@lat", xmlDoc, XPathConstants.STRING));
-      return new GeoData(caption, longitude, latitude); //В случае ошибки будут получены координаты 0,0, а название NOT FOUND
+      return new GeoData(caption, longitude, latitude); // В случае ошибки будут получены координаты 0,0, а название NOT FOUND
     }
     catch (Exception e) {
-      return new GeoData("NOT FOUND", 0.0, 0.0); //В случае ошибки будут получены координаты 0,0, а название NOT FOUND
+      return new GeoData("NOT FOUND", 0.0, 0.0); // В случае ошибки будут получены координаты 0,0, а название NOT FOUND
     }
   }
 
   public static GeoData getByCoordinates(float longitude,float latitude){
-    //Создает http запрос к сервису nominatim openstreetmaps и парсит ответ сервера
-    //Возвращает null если ответ не был получем или места с таким названием не было найдено
+    // Создает http запрос к сервису nominatim openstreetmaps и парсит ответ сервера
+    // Возвращает null если ответ не был получем или места с таким названием не было найдено
     try {
       String encodedCaption = URLEncoder.encode(String.valueOf(latitude)+","+String.valueOf(longitude), "UTF-8");
-      URL url = new URL("https://nominatim.openstreetmap.org/search?q=" + encodedCaption + "&format=xml&limit=1");//Ограничиваемся первым результатом для простоты, они сортируются по важности и первый, вероятно, нужный.
+      URL url = new URL("https://nominatim.openstreetmap.org/search?q=" + encodedCaption + "&format=xml&limit=1");// Ограничиваемся первым результатом для простоты, они сортируются по важности и первый, вероятно, нужный.
         Document xmlDoc = loadXMLFromString(getServerResponse(url,false));
         XPathFactory xpathFact = XPathFactory.newInstance();
         XPath xpath = xpathFact.newXPath();
-        String caption = (String) xpath.evaluate("/searchresults/place[1]/@display_name", xmlDoc, XPathConstants.STRING); //Важно чтобы стояла локаль, в которой дробный разделитель это точка
+        String caption = (String) xpath.evaluate("/searchresults/place[1]/@display_name", xmlDoc, XPathConstants.STRING); // Важно чтобы стояла локаль, в которой дробный разделитель это точка
         return new GeoData(caption, longitude, latitude);
       }
       catch (Exception e) {
-        return new GeoData("", longitude,latitude); //В случае ошибки просто возвращаем объект с пустым названием
+        return new GeoData("", longitude,latitude); // В случае ошибки просто возвращаем объект с пустым названием
     }
   }
 
-  public static RouteData route(ArrayList<GeoData> locations){
-    //Строит точечный маршрут между указанными в locations точками
+  public static RouteData route(ArrayList<GeoData> locations) {
+    // Строит точечный маршрут между указанными в locations точками
     String coordintates = "",extractedData = null;
     int time, distance;
     ArrayList<GeoData> routePoints = new ArrayList<>();
@@ -81,10 +80,10 @@ public class GeoCoder {
       URL url = new URL("http://router.project-osrm.org/route/v1/driving/"+encodedCoordinates+"?geometries=geojson&overview=simplified");
       extractedData = getServerResponse(url,true);
     }
-    catch (Exception e){
-      //pass
+    catch (Exception e) {
+      // pass
     }
-    if (extractedData != null){
+    if (extractedData != null) {
       JSONObject obj = new JSONObject(extractedData);
       JSONArray arr = obj.getJSONArray("routes");
       JSONObject arrElem = arr.getJSONObject(0);
@@ -101,7 +100,7 @@ public class GeoCoder {
   }
 
   private static String getServerResponse(URL url, boolean repeat) {
-    //Устанавливает соединение по указанному URL и возрващает ответ от сервета в виде строки
+    // Устанавливает соединение по указанному URL и возрващает ответ от сервета в виде строки
     do {
       try {
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -111,17 +110,16 @@ public class GeoCoder {
         con.setReadTimeout(2000);
         con.connect();
         String response = con.getResponseMessage();
-        if (!response.equals("Unknown")){
-          //Все номрмально
-          //Считывание ответа сервера
+        if (!response.equals("Unknown")) {
+          // Считывание ответа сервера
           BufferedReader br = new BufferedReader(new InputStreamReader((con.getInputStream())));
           StringBuilder sb = new StringBuilder();
           String output;
           while ((output = br.readLine()) != null) {
             sb.append(output);
           }
-          String extractedData = sb.toString(); //На деле это xml, представленный строкой
-          con.disconnect(); //Разрываем соединение по первой возможности
+          String extractedData = sb.toString(); // На деле это xml, представленный строкой
+          con.disconnect(); // Разрываем соединение по первой возможности
           return extractedData;
         }
       } catch (IOException ioe) {
@@ -133,7 +131,7 @@ public class GeoCoder {
   }
 
   private static Document loadXMLFromString(String xml) throws Exception {
-    //Превращает строку в xml документ
+    // Превращает строку в xml документ
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     DocumentBuilder builder = factory.newDocumentBuilder();
     InputSource is = new InputSource(new StringReader(xml));
@@ -141,7 +139,7 @@ public class GeoCoder {
   }
 
   private GeoCoder(){
-    //Запрещаем создание таких объектов
+    // Запрещаем создание таких объектов
   }
 
 }
